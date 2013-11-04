@@ -1,0 +1,3 @@
+[submodule "gandi-dyndns"]
+	path = gandi-dyndns
+	url = https://github.com/ybz/gandi-dyndns.git
