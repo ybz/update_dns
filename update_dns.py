@@ -2,9 +2,10 @@
 
 import os
 import g_dyndns
-
+from datetime import datetime
 
 CACHE_FILE_NAME = 'ip_cache'
+LOG_FILE_NAME = 'action_log'
 self_path = None
 
 def init_self_path():
@@ -27,6 +28,23 @@ def update_cache(ip):
     ret = f_h.write(ip)
     f_h.close()
 
+def update_log(ip=None):
+    if ip == None:
+        return
+    data = []
+    if os.path.exists(relpath(LOG_FILE_NAME)):
+        f_h = open(relpath(LOG_FILE_NAME), 'r')
+        data = f_h.readlines()
+        f_h.close()
+    f_h = open(relpath(LOG_FILE_NAME), 'w')
+    if ip == False:
+        message = "Failed update"
+    else:
+        message = ip
+    data.append("%-20s - %s\n" %(message, datetime.now().isoformat()))
+    f_h.writelines(data[-1000:])
+    f_h.close()
+
 def update_ip(key, domain, record, ip):
     zone_id = g_dyndns.get_zoneid_by_domain(key, domain)
     old_version_id = g_dyndns.api.domain.zone.info(key, zone_id)['version']
@@ -39,7 +57,11 @@ def update_ip(key, domain, record, ip):
 def consider_update_ip(*args):
     current_ip = g_dyndns.get_public_ipv4()
     if current_ip != get_prev_ip():
-        update_ip(*args, ip = current_ip)
+        try:
+            update_ip(*args, ip = current_ip)
+            update_log(current_ip)
+        except:
+            update_log(False)
 
 if __name__ == "__main__":
     key = os.environ.get('gandi_key')
