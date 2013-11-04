@@ -29,9 +29,11 @@ def update_cache(ip):
 
 def update_ip(key, domain, record, ip):
     zone_id = g_dyndns.get_zoneid_by_domain(key, domain)
+    old_version_id = g_dyndns.api.domain.zone.info(key, zone_id)['version']
     version_id = g_dyndns.create_new_zone_version(key, zone_id)
     g_dyndns.update_record(key, zone_id, version_id, record, 'A', ip)
     g_dyndns.api.domain.zone.version.set(key, zone_id, version_id)
+    g_dyndns.api.domain.zone.version.delete(key, zone_id, old_version_id)
     update_cache(ip)
 
 def consider_update_ip(*args):
