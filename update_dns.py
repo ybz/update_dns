@@ -28,8 +28,8 @@ def update_cache(ip):
     ret = f_h.write(ip)
     f_h.close()
 
-def update_log(ip=None):
-    if ip == None:
+def update_log(msg=None, ip=''):
+    if msg == None:
         return
     data = []
     if os.path.exists(relpath(LOG_FILE_NAME)):
@@ -37,11 +37,10 @@ def update_log(ip=None):
         data = f_h.readlines()
         f_h.close()
     f_h = open(relpath(LOG_FILE_NAME), 'w')
-    if ip == False:
-        message = "Failed update"
-    else:
-        message = ip
-    data.append("%-20s - %s\n" %(message, datetime.now().isoformat()))
+    if msg == 'IP':
+        msg = ip
+    message = "%-20s - %s\n" %(msg, datetime.now().isoformat())
+    data.append(message)
     f_h.writelines(data[-2000:])
     f_h.close()
 
@@ -56,13 +55,15 @@ def update_ip(key, domain, record, ip):
 
 def consider_update_ip(should_update_gandi=True, *args):
     current_ip = g_dyndns.get_public_ipv4()
-    if current_ip != get_prev_ip():
+    if current_ip and (current_ip != get_prev_ip()):
         try:
             if should_update_gandi:
                 update_ip(*args, ip = current_ip)
-            update_log(current_ip)
+            update_log('IP',current_ip)
         except:
-            update_log(False)
+            update_log('Update error')
+    else:
+        update_log('No IP found')
 
 if __name__ == "__main__":
     key = os.environ.get('gandi_key')
