@@ -42,7 +42,7 @@ def update_log(ip=None):
     else:
         message = ip
     data.append("%-20s - %s\n" %(message, datetime.now().isoformat()))
-    f_h.writelines(data[-1000:])
+    f_h.writelines(data[-2000:])
     f_h.close()
 
 def update_ip(key, domain, record, ip):
@@ -54,11 +54,12 @@ def update_ip(key, domain, record, ip):
     g_dyndns.api.domain.zone.version.delete(key, zone_id, old_version_id)
     update_cache(ip)
 
-def consider_update_ip(*args):
+def consider_update_ip(should_update_gandi=True, *args):
     current_ip = g_dyndns.get_public_ipv4()
     if current_ip != get_prev_ip():
         try:
-            update_ip(*args, ip = current_ip)
+            if should_update_gandi:
+                update_ip(*args, ip = current_ip)
             update_log(current_ip)
         except:
             update_log(False)
@@ -67,6 +68,7 @@ if __name__ == "__main__":
     key = os.environ.get('gandi_key')
     domain = os.environ.get('gandi_domain')
     record = os.environ.get('gandi_record')
+    should_update_gandi = bool(int(os.environ.get('gandi_update','0')))
     init_self_path()
     if key and domain and record:
-        consider_update_ip(key, domain, record)
+        consider_update_ip(should_update_gandi, key, domain, record)
