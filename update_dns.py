@@ -51,17 +51,18 @@ def update_ip(key, domain, record, ip):
     g_dyndns.update_record(key, zone_id, version_id, record, 'A', ip)
     g_dyndns.api.domain.zone.version.set(key, zone_id, version_id)
     g_dyndns.api.domain.zone.version.delete(key, zone_id, old_version_id)
-    update_cache(ip)
 
 def consider_update_ip(should_update_gandi=True, *args):
     current_ip = g_dyndns.get_public_ipv4()
-    if current_ip and (current_ip != get_prev_ip()):
-        try:
-            if should_update_gandi:
-                update_ip(*args, ip = current_ip)
-            update_log('IP',current_ip)
-        except:
-            update_log('Update error')
+    if current_ip:
+        if current_ip != get_prev_ip():
+            try:
+                if should_update_gandi:
+                    update_ip(*args, ip = current_ip)
+                update_cache(current_ip)
+                update_log('IP',current_ip)
+            except:
+                update_log('Update error')
     else:
         update_log('No IP found')
 
